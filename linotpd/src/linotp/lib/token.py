@@ -1658,6 +1658,8 @@ def getTokens4UserOrSerial(user=None, serial=None, token_type=None,
         if '*' in serial:
             serial = serial.replace('*', '%')
             sconditions += ((Token.LinOtpTokenSerialnumber.like(serial)),)
+        elif isinstance(serial, list):
+            sconditions += ((Token.LinOtpTokenSerialnumber.in_(serial)),)
         else:
             sconditions += ((Token.LinOtpTokenSerialnumber == serial),)
 

@@ -28,7 +28,6 @@
 
 from linotp.lib.utils import config_get, INI_FILE
 from sqlalchemy import *
-from sqlalchemy.sql import text as sql_text
 from getopt import getopt, GetoptError
 import sys, datetime
 import logging, logging.config
@@ -64,12 +63,12 @@ def token_usage(SQL_URL, AUDIT_URL, AUDIT_PREFIX):
     overall_number = int(row[id_pos])
 
     # not assigned tokens
-    rows = select([func.count()]).select_from(token).where(sql_text("LinOtpUserid=''")).execute()
+    rows = select([func.count()]).select_from(token).where(token.c.LinOtpUserid == '').execute()
     row = rows.fetchone()
     not_assigned = int(row[id_pos])
 
     # disabled tokens
-    rows = select([func.count()]).select_from(token).where(sql_text("LinOtpIsactive=0")).execute()
+    rows = select([func.count()]).select_from(token).where(token.c.LinOtpIsactive == False).execute()
     row = rows.fetchone()
     not_active = int(row[id_pos])
 
@@ -88,8 +87,10 @@ def token_usage(SQL_URL, AUDIT_URL, AUDIT_PREFIX):
     print("================")
     # The audit table already exists, so no need to redefine it. Just
     # load it from the database using the "autoload" feature.
+    # TODO: Since metadata comes from SQL_URL, this code doesn't support AUDIT_URL being different
+    #       from SQL_URL (It needs a new engine and metadata object)
     audit = Table('%saudit' % AUDIT_PREFIX, metadata, autoload=True)
-    rows = audit.select(sql_text("action_detail like '%tokennum%'"),
+    rows = audit.select(audit.c.action_detail.like('%tokennum%'),
                         order_by=column("id").desc()).execute()
 
     current_month = None
@@ -130,6 +131,8 @@ def token_usage(SQL_URL, AUDIT_URL, AUDIT_PREFIX):
 
 def main():
 
+    # TODO: Since metadata comes from SQL_URL, this code doesn't support AUDIT_URL being different
+    #       from SQL_URL (It needs a new engine and metadata object)
     AUDIT_URL = config_get("DEFAULT", "linotpAudit.sql.url")
     SQL_URL = config_get("app:main", "sqlalchemy.url")
     AUDIT_PREFIX = config_get("DEFAULT" , "linotpAudit.sql.table_prefix") or ""

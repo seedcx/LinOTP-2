@@ -33,7 +33,6 @@ This is a monitoring program, that determines the number of used tokens.
 """
 
 from sqlalchemy import *
-from sqlalchemy import text as sql_text
 from linotp.lib.utils import config_get, INI_FILE
 import sys
 
@@ -64,13 +63,13 @@ def tokens_used(SQL_URL):
 
     # not assigned tokens
     rows = select([func.count()]).select_from(
-        token).where(sql_text("LinOtpUserid=''")).execute()
+        token).where(token.c.LinOtpUserid == '').execute()
     row = rows.fetchone()
     not_assigned = int(row[id_pos])
 
     # disabled tokens
     rows = select([func.count()]).select_from(token).where(
-        sql_text("LinOtpIsactive=0")).execute()
+        token.c.LinOtpIsactive == False).execute()
     row = rows.fetchone()
     not_active = int(row[id_pos])
 
